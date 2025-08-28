@@ -8,7 +8,6 @@ import css from "./NoteList.module.css";
 
 export interface NoteListProps {
   notes: Note[];
-  /** Если нужно скрыть кнопку Delete — передай false */
   enableDelete?: boolean;
 }
 
