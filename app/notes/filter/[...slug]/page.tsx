@@ -1,14 +1,9 @@
-// app/notes/filter/[...slug]/page.tsx
-import {
-  dehydrate,
-  HydrationBoundary,
-  QueryClient,
-} from "@tanstack/react-query";
+import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
 import { notFound } from "next/navigation";
 import { fetchNotes } from "@/lib/api";
 import NotesClient from "./Notes.client";
 
-const VALID_TAGS = ["All", "Work", "Personal", "Todo", "Idea"];
+const VALID_TAGS = ["All", "Work", "Personal", "Todo", "Meeting", "Shopping"];
 
 export default async function FilterPage({
   params,
@@ -22,7 +17,7 @@ export default async function FilterPage({
 
   const tagRaw = slug?.[0] ?? "All";
   if (!VALID_TAGS.includes(tagRaw)) {
-    notFound(); // покажем /app/not-found.tsx для неизвестного тега
+    notFound();
   }
 
   const tag = tagRaw === "All" ? undefined : tagRaw;
@@ -37,7 +32,8 @@ export default async function FilterPage({
 
   return (
     <HydrationBoundary state={dehydrate(qc)}>
-      <NotesClient initialQ={q} initialPage={page} tag={tag ?? null} />
+      {/* передаємо лише tag */}
+      <NotesClient tag={tag ?? null} />
     </HydrationBoundary>
   );
 }
