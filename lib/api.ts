@@ -1,4 +1,3 @@
-// lib/api.ts
 import api from "./api/axios";
 import type { Note } from "@/types/note";
 
@@ -26,7 +25,7 @@ export async function fetchNotes(
   const qs: Record<string, string | number | undefined> = {
     q,
     page,
-    ...(tag ? { tag } : {}), // "All" не отправляем
+    ...(tag ? { tag } : {}),
   };
   const { data } = await api.get<PaginatedNotesResponse>("/notes", {
     params: qs,
@@ -55,7 +54,8 @@ export async function updateNote(
   return data;
 }
 
-/** Удаление заметки */
-export async function deleteNote(id: number | string): Promise<void> {
-  await api.delete<void>(`/notes/${id}`);
+/** Удаление заметки — возвращаем удалённый объект */
+export async function deleteNote(id: number | string): Promise<Note> {
+  const { data } = await api.delete<Note>(`/notes/${id}`);
+  return data;
 }
