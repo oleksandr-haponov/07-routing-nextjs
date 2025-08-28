@@ -6,7 +6,7 @@ import styles from "./NoteCard.module.css";
 
 export interface NoteCardProps {
   note: Note;
-  onDelete?: (id: number | string) => void; // <-- принимаем number | string
+  onDelete?: (id: string) => void; // только string
 }
 
 export default function NoteCard({ note, onDelete }: NoteCardProps) {
@@ -24,7 +24,7 @@ export default function NoteCard({ note, onDelete }: NoteCardProps) {
         </Link>
         {onDelete && (
           <button
-            onClick={() => onDelete(note.id)} // передаём number — ок
+            onClick={() => onDelete(note.id)} // note.id уже string
             className={styles.delete}
           >
             Delete

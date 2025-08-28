@@ -11,18 +11,17 @@ export default async function NoteDetailsPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
-  const noteId = Number(id);
+  const { id } = await params; // строковый id
 
-  const qc = new QueryClient();
-  await qc.prefetchQuery({
-    queryKey: ["note", String(noteId)],
-    queryFn: () => fetchNoteById(String(noteId)), // строкой, чтобы не было TS-конфликта
+  const queryClient = new QueryClient();
+  await queryClient.prefetchQuery({
+    queryKey: ["note", id],
+    queryFn: () => fetchNoteById(id),
   });
 
   return (
-    <HydrationBoundary state={dehydrate(qc)}>
-      <NoteDetailsClient id={noteId} />
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <NoteDetailsClient id={id} />
     </HydrationBoundary>
   );
 }

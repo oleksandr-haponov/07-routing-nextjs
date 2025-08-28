@@ -4,11 +4,8 @@ import { notes } from "@/lib/api/mockData";
 type Note = (typeof notes)[number];
 type PatchBody = Partial<Pick<Note, "title" | "content" | "tag">>;
 
-// Разрешаем только чисто числовую строку
-function parseIdStrict(idStr: string): number | null {
-  if (!/^\d+$/.test(idStr)) return null;
-  return Number(idStr);
-}
+const isValidId = (id: string) =>
+  typeof id === "string" && id.trim().length > 0;
 
 // GET /api/notes/[id]
 export async function GET(
@@ -16,18 +13,16 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  const noteId = parseIdStrict(id);
-  if (noteId === null) {
-    // считаем как не найдено, чтобы UI не видел 400
+  if (!isValidId(id)) {
     return NextResponse.json({ error: "Note not found" }, { status: 404 });
   }
 
-  const note = notes.find((n) => n.id === noteId);
-  if (!note) {
-    return NextResponse.json({ error: "Note not found" }, { status: 404 });
-  }
+  // n.id может быть number, приводим к строке
+  const note = notes.find((n) => String(n.id) === id);
 
-  return NextResponse.json(note);
+  return note
+    ? NextResponse.json(note)
+    : NextResponse.json({ error: "Note not found" }, { status: 404 });
 }
 
 // PATCH /api/notes/[id]
@@ -36,19 +31,22 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  const noteId = parseIdStrict(id);
-  if (noteId === null) {
+  if (!isValidId(id)) {
     return NextResponse.json({ error: "Note not found" }, { status: 404 });
   }
 
   const body = (await req.json()) as PatchBody;
-  const idx = notes.findIndex((n) => n.id === noteId);
+  const idx = notes.findIndex((n) => String(n.id) === id);
   if (idx === -1) {
     return NextResponse.json({ error: "Note not found" }, { status: 404 });
   }
 
-  const now = new Date().toISOString();
-  notes[idx] = { ...notes[idx], ...body, updatedAt: now } as Note;
+  notes[idx] = {
+    ...notes[idx],
+    ...body,
+    updatedAt: new Date().toISOString(),
+  } as Note;
+
   return NextResponse.json(notes[idx]);
 }
 
@@ -58,12 +56,11 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  const noteId = parseIdStrict(id);
-  if (noteId === null) {
+  if (!isValidId(id)) {
     return NextResponse.json({ error: "Note not found" }, { status: 404 });
   }
 
-  const idx = notes.findIndex((n) => n.id === noteId);
+  const idx = notes.findIndex((n) => String(n.id) === id);
   if (idx === -1) {
     return NextResponse.json({ error: "Note not found" }, { status: 404 });
   }

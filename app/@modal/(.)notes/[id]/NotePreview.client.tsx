@@ -7,13 +7,12 @@ import type { Note } from "@/types/note";
 import Modal from "@/components/Modal/Modal";
 import NotePreview from "@/components/NotePreview/NotePreview";
 
-export default function NotePreviewClient({ id }: { id: number }) {
+export default function NotePreviewClient({ id }: { id: string }) {
   const router = useRouter();
-  const noteId = String(id);
 
   const { data, isLoading, isError, error } = useQuery<Note>({
-    queryKey: ["note", noteId],
-    queryFn: () => fetchNoteById(noteId),
+    queryKey: ["note", id],
+    queryFn: () => fetchNoteById(id),
     refetchOnMount: false,
     retry: false,
   });

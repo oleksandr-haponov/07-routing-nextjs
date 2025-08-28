@@ -5,6 +5,6 @@ export default async function NoteModalPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
-  return <NoteModalClient id={Number(id)} />;
+  const { id } = await params; // строковый id
+  return <NoteModalClient id={id} />;
 }

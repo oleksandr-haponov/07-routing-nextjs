@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { notes } from "@/lib/api/mockData";
 
 type Note = (typeof notes)[number];
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 2;
 
 function filter(all: Note[], q?: string, tag?: string) {
   let res = all;
@@ -17,8 +17,8 @@ function filter(all: Note[], q?: string, tag?: string) {
           .includes(s),
     );
   }
-  if (tag) {
-    res = res.filter((n) => String(n.tag) === tag);
+  if (tag && tag !== "All") {
+    res = res.filter((n) => n.tag === tag);
   }
   return res;
 }
@@ -48,20 +48,24 @@ export async function POST(req: NextRequest) {
   const body = (await req.json()) as Partial<
     Pick<Note, "title" | "content" | "tag">
   >;
-  if (!body?.title || !body?.content || !body?.tag) {
+
+  if (!body?.title || !body?.tag) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
   const now = new Date().toISOString();
-  const maxId = notes.reduce((m, n) => (n.id > m ? n.id : m), 0);
-  const newNote = {
-    id: maxId + 1,
-    title: body.title,
-    content: body.content,
+  // генерируем СТРОКОВЫЙ id
+  const id = (globalThis.crypto?.randomUUID?.() ??
+    Date.now().toString()) as string;
+
+  const newNote: Note = {
+    id,
+    title: body.title.trim(),
+    content: (body.content ?? "").trim(),
     tag: body.tag,
     createdAt: now,
     updatedAt: now,
-  } as Note;
+  };
 
   notes.unshift(newNote);
   return NextResponse.json(newNote, { status: 201 });

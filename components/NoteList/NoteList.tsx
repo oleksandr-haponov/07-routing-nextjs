@@ -11,7 +11,10 @@ export interface NoteListProps {
   enableDelete?: boolean;
 }
 
-export default function NoteList({ notes, enableDelete = true }: NoteListProps) {
+export default function NoteList({
+  notes,
+  enableDelete = true,
+}: NoteListProps) {
   const qc = useQueryClient();
 
   const {
@@ -27,7 +30,9 @@ export default function NoteList({ notes, enableDelete = true }: NoteListProps) 
     onMutate: async (id: string | number) => {
       await qc.cancelQueries({ queryKey: ["notes"] });
 
-      const prev = qc.getQueriesData<PaginatedNotesResponse>({ queryKey: ["notes"] });
+      const prev = qc.getQueriesData<PaginatedNotesResponse>({
+        queryKey: ["notes"],
+      });
 
       prev.forEach(([key, data]) => {
         if (!data) return;
