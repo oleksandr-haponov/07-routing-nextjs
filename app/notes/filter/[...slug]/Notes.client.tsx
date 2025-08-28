@@ -1,8 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { fetchNotes, type PaginatedNotesResponse } from "@/lib/api";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import {
+  fetchNotes,
+  createNote,
+  type PaginatedNotesResponse,
+  type CreateNotePayload,
+} from "@/lib/api";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import Pagination from "@/components/Pagination/Pagination";
 import NoteList from "@/components/NoteList/NoteList";
@@ -11,12 +21,14 @@ import NoteForm from "@/components/NoteForm/NoteForm";
 import css from "./NotesPage.module.css";
 
 export default function NotesClient({ tag }: { tag: string | null }) {
+  const qc = useQueryClient();
+
   const [search, setSearch] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [page, setPage] = useState(1);
   const [isCreateOpen, setCreateOpen] = useState(false);
 
-  // debounce пошуку
+  // debounce поиска
   useEffect(() => {
     const t = setTimeout(() => {
       setDebouncedQ(search.trim());
@@ -32,6 +44,15 @@ export default function NotesClient({ tag }: { tag: string | null }) {
       placeholderData: keepPreviousData,
       refetchOnWindowFocus: false,
     });
+
+  // Мутация создания заметки для NoteForm
+  const create = useMutation({
+    mutationFn: (payload: CreateNotePayload) => createNote(payload),
+    onSuccess: () => {
+      setCreateOpen(false);
+      qc.invalidateQueries({ queryKey: ["notes"] });
+    },
+  });
 
   if (isLoading) return <p>Loading, please wait...</p>;
   if (error)
@@ -63,6 +84,7 @@ export default function NotesClient({ tag }: { tag: string | null }) {
         <p>No notes found.</p>
       ) : (
         <>
+          {/* удаление для HW-07 не требуется, поэтому просто список */}
           <NoteList notes={notes} />
           {totalPages > 1 && (
             <div className={css.paginationWrap}>
@@ -77,9 +99,18 @@ export default function NotesClient({ tag }: { tag: string | null }) {
         </>
       )}
 
-      {/* модалка створення нотатки */}
+      {/* модалка создания (HW-07 требует модалку в NotesClient) */}
       <Modal open={isCreateOpen} onClose={() => setCreateOpen(false)}>
-        <NoteForm onCancel={() => setCreateOpen(false)} />
+        <NoteForm
+          onSuccess={(payload) => create.mutate(payload)}
+          onCancel={() => setCreateOpen(false)}
+          isSubmitting={create.isPending}
+          errorMsg={
+            create.isError
+              ? ((create.error as Error)?.message ?? "Failed to create note")
+              : undefined
+          }
+        />
       </Modal>
     </div>
   );
