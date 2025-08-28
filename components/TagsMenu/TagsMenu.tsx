@@ -3,7 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import css from "./TagsMenu.module.css";
 
-const TAGS = ["All", "Work", "Personal", "Todo", "Idea"];
+// Додаємо відсутні теги Meeting та Shopping (та залишаємо решту)
+const TAGS = [
+  "All",
+  "Work",
+  "Personal",
+  "Todo",
+  "Meeting",
+  "Shopping",
+] as const;
 
 export default function TagsMenu() {
   const [open, setOpen] = useState(false);
@@ -20,17 +28,11 @@ export default function TagsMenu() {
       if (e.key === "Escape") setOpen(false);
     };
 
-    // двойная защита от SSR
-    if (typeof document !== "undefined") {
-      document.addEventListener("mousedown", onDoc);
-      document.addEventListener("keydown", onKey);
-    }
-
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
     return () => {
-      if (typeof document !== "undefined") {
-        document.removeEventListener("mousedown", onDoc);
-        document.removeEventListener("keydown", onKey);
-      }
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
     };
   }, [open]);
 
@@ -45,6 +47,7 @@ export default function TagsMenu() {
       >
         Notes ▾
       </button>
+
       {open && (
         <ul className={css.menuList} role="menu" aria-label="Filter by tag">
           {TAGS.map((tag) => {
