@@ -1,35 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import Link from "next/link";
-import { fetchNotes, deleteNote, type PaginatedNotesResponse } from "@/lib/api";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { fetchNotes, type PaginatedNotesResponse } from "@/lib/api";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import Pagination from "@/components/Pagination/Pagination";
 import NoteList from "@/components/NoteList/NoteList";
+import Modal from "@/components/Modal/Modal";
+import NoteForm from "@/components/NoteForm/NoteForm";
 import css from "./NotesPage.module.css";
 
-export default function NotesClient({
-  initialQ,
-  initialPage,
-  tag,
-}: {
-  initialQ?: string;
-  initialPage: number;
-  tag: string | null;
-}) {
-  const qc = useQueryClient();
+export default function NotesClient({ tag }: { tag: string | null }) {
+  const [search, setSearch] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
+  const [page, setPage] = useState(1);
+  const [isCreateOpen, setCreateOpen] = useState(false);
 
-  const [search, setSearch] = useState(initialQ ?? "");
-  const [debouncedQ, setDebouncedQ] = useState(initialQ ?? "");
-  const [page, setPage] = useState(initialPage || 1);
-
-  // debounce поиска
+  // debounce пошуку
   useEffect(() => {
     const t = setTimeout(() => {
       setDebouncedQ(search.trim());
@@ -38,22 +25,15 @@ export default function NotesClient({
     return () => clearTimeout(t);
   }, [search]);
 
-  const { data, isLoading, error, isFetching } =
-    useQuery<PaginatedNotesResponse>({
-      queryKey: ["notes", { q: debouncedQ, page, tag: tag ?? "" }],
-      queryFn: () => fetchNotes({ q: debouncedQ, page, tag: tag ?? undefined }),
-      placeholderData: keepPreviousData,
-      refetchOnWindowFocus: false,
-    });
-
-  const del = useMutation({
-    mutationFn: (id: number | string) => deleteNote(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["notes"] }),
+  const { data, isLoading, error, isFetching } = useQuery<PaginatedNotesResponse>({
+    queryKey: ["notes", { q: debouncedQ, page, tag: tag ?? "" }],
+    queryFn: () => fetchNotes({ q: debouncedQ, page, tag: tag ?? undefined }),
+    placeholderData: keepPreviousData,
+    refetchOnWindowFocus: false,
   });
 
   if (isLoading) return <p>Loading, please wait...</p>;
-  if (error)
-    return <p>Could not fetch the list of notes. {(error as Error).message}</p>;
+  if (error) return <p>Could not fetch the list of notes. {(error as Error).message}</p>;
 
   const notes = data?.notes ?? [];
   const totalPages = data?.totalPages ?? 1;
@@ -62,30 +42,18 @@ export default function NotesClient({
     <div className={css.app}>
       <div className={css.toolbar}>
         <div style={{ flex: "1 1 520px", maxWidth: 520 }}>
-          <SearchBox
-            value={search}
-            onChange={setSearch}
-            placeholder="Search notes..."
-          />
+          <SearchBox value={search} onChange={setSearch} placeholder="Search notes..." />
         </div>
-        {/* кнопка справа */}
-        <Link href="/notes/New" className={css.button}>
+        <button type="button" className={css.button} onClick={() => setCreateOpen(true)}>
           Create note
-        </Link>
+        </button>
       </div>
 
       {notes.length === 0 ? (
         <p>No notes found.</p>
       ) : (
         <>
-          <NoteList
-            notes={notes}
-            onDelete={(id) => del.mutate(id)}
-            isDeleting={del.isPending}
-            deletingId={
-              (del.variables as number | string | undefined) ?? undefined
-            }
-          />
+          <NoteList notes={notes} />
           {totalPages > 1 && (
             <div className={css.paginationWrap}>
               <Pagination
@@ -98,6 +66,11 @@ export default function NotesClient({
           )}
         </>
       )}
+
+      {/* модалка створення нотатки */}
+      <Modal open={isCreateOpen} onClose={() => setCreateOpen(false)}>
+        <NoteForm onCancel={() => setCreateOpen(false)} />
+      </Modal>
     </div>
   );
 }
