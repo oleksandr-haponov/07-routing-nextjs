@@ -1,3 +1,4 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/Header/Header";
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-  modal, // обязателен, так как slot @modal есть на корне
+  modal, // обязательный слот из app/@modal
 }: {
   children: React.ReactNode;
   modal: React.ReactNode;
@@ -19,12 +20,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Header />
         <TanStackProvider>
+          <Header />
           {children}
           {modal}
+          <Footer />
         </TanStackProvider>
-        <Footer />
       </body>
     </html>
   );
