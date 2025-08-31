@@ -17,6 +17,9 @@ export default function TagsMenu() {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
+  // NEW: замыкаем в функцию — будем вызывать при выборе опции
+  const handleSelect = () => setOpen(false); // ← закрыть сразу после выбора
+
   useEffect(() => {
     if (!open) return;
 
@@ -55,7 +58,14 @@ export default function TagsMenu() {
               tag === "All" ? "/notes/filter/All" : `/notes/filter/${tag}`;
             return (
               <li key={tag} className={css.menuItem} role="none">
-                <a className={css.menuLink} role="menuitem" href={href}>
+                <a
+                  className={css.menuLink}
+                  role="menuitem"
+                  href={href}
+                  // NEW: мгновенно закрываем дропдаун при выборе
+                  onPointerDown={handleSelect} // для мыши/тача — закрывает до навигации
+                  onClick={handleSelect} // для клавиатуры (Enter/Space)
+                >
                   {tag}
                 </a>
               </li>
