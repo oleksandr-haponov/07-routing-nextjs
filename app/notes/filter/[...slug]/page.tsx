@@ -13,13 +13,13 @@ export default async function FilterPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ slug?: string[] }>;
+  params: Promise<{ slug: string[] }>; // ← було slug?: string[]; зроблено обов’язковим
   searchParams: Promise<{ q?: string; page?: string }>;
 }) {
   const { slug } = await params;
   const sp = await searchParams;
 
-  const tagRaw = slug?.[0] ?? "All";
+  const tagRaw = slug[0] ?? "All"; // ← прибрано optional chaining (було slug?.[0])
   if (!VALID_TAGS.includes(tagRaw)) {
     notFound();
   }
